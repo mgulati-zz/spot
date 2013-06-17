@@ -1,0 +1,19 @@
+!!!5
+html
+  head
+    title="spot"
+    link(rel='stylesheet', href='style.css')
+    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js')
+    script(src='/socket.io/socket.io.js')
+    script(src='https://maps.googleapis.com/maps/api/js?key=AIzaSyCkcOEcNJiTZns5pJL7mZ7TZIEijQGGrc4&sensor=true')
+    script(src='page.js')
+
+  body
+    #showLocation
+      p.step Step 1
+      p Tell us where you are
+      p.small Allow location on your browser
+    #obfuscateMap
+    #mapCanvas
+
+    
