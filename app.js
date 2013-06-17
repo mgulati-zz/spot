@@ -45,11 +45,12 @@ io.configure(function () {
 
 });
 
-//the entire database
+//the entire database is just javascript variables
 var friends = {};
 var colors = {};
 var rooms = {};
-var desination = {};
+var destination = {};
+var userCount = 0;
 
 io.sockets.on('connection', function (socket) {
 
@@ -61,24 +62,24 @@ io.sockets.on('connection', function (socket) {
   //join the room you wanted to join based on pathname
   room = url.parse(socket.handshake.headers.referer).pathname;
   room = room.slice(1);
-  if (room != "") {
-    console.log(room);
+  if (room === "") console.log(socket.id + " joined to the homepage");
+  if (room) {
     socket.join(room);
     rooms[socket.id] = room;
-    //start off with friend data already existing
-    if (friends[room])
-      socket.emit('theOthers', friends[room], destination[room]);
+    socket.emit('testing');
+    socket.emit('initialize', friends[room], destination[room], room);
+    console.log(socket.id + " joined " + room + ".");
   }
 
+  userCount++;
+  console.log('userCount: ' + userCount)
+
   //when the initial location is sent and room is made
-  socket.on('makeRoom', function (room, myData) {
+  socket.on('makeRoom', function (room) {
     if (io.sockets.manager.rooms['/'+room])
       socket.emit('roomExists', room);
     else {
       socket.join(room);
-      friends[room] = {};
-      friends[room][myData.color] = myData;
-      colors[socket.id] = myData.color;
       rooms[socket.id] = room;
       socket.emit('roomCreated', room);
     }
@@ -86,19 +87,28 @@ io.sockets.on('connection', function (socket) {
 
   //when a person updates their location
   socket.on('showLocation', function (room, myData) {
-    friends[room][myData.color] = myData;
-    colors[socket.id] = myData.color;
-    io.sockets.in(room).emit('updateLocation', friends[room]);
+    if (room) {
+      console.log(myData.color + ' in ' + room + ' updated to ' + myData.position);
+      if (!friends[room]) friends[room] = {};
+      friends[room][myData.color] = myData;
+      colors[socket.id] = myData.color;
+      io.sockets.in(room).emit('updateLocation', friends[room]);
+    }
   });
 
-  //when anybody in the room updates the destination
-  socket.on('updateDestination', function (latLong, room) {
-    desination[room] = latLong;
-    io.sockets.in(room).emit('updateDestination', desination[room]);
+  //when anybody in the room updates the destination, update database and send to all
+  socket.on('updateDestination', function (room, latLong) {
+    if (room) {
+      console.log('destination in ' + room + ' updated to ' + latLong);
+      destination[room] = latLong;
+      io.sockets.in(room).emit('sendDestination', destination[room]);
+    }
   });
 
-  //take out person from room
+  //take out person from room, delete in dataabse
   socket.on('disconnect', function () {
+    console.log(socket.id + " left " + rooms[socket.id]);
+    console.log('userCount: ' + --userCount)
     if (friends[rooms[socket.id]] && friends[rooms[socket.id]][colors[socket.id]]) {
       delete friends[rooms[socket.id]][colors[socket.id]];
       io.sockets.in(rooms[socket.id]).emit('personLeft', colors[socket.id]);
@@ -106,6 +116,7 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
+//routing, if css and javascript send file, otherwise render the page
 app.get('/:room?', function(req, res, next){
   if (req.params.room && 
       (req.params.room.indexOf(".js", req.params.room.length - ".js".length) !== -1 ||
