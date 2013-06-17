@@ -91,5 +91,5 @@ function getGeo(position) {
 
 function changeDest(location) {
   destination.setPosition(location);
-  friends[0].showDirections();
+  for (i in friends) friends[i].showDirections();
 }
