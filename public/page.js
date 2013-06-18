@@ -25,7 +25,8 @@ var friend = function(Color, Position, TravelMode) {
     preserveViewport: true,
     suppressBicyclingLayer: true,
     polylineOptions: new google.maps.Polyline({
-      strokeColor: this.color
+      strokeColor: this.color,
+      strokeOpacity: 0.6
     })
   });
 
@@ -45,10 +46,11 @@ var friend = function(Color, Position, TravelMode) {
     },
   });
 
-  this.showDirections();
+  if (destination.position) this.showDirections();
 }
 
 friend.prototype.showDirections = function(){
+  var dfd = $.Deferred();
   var current = this;
 
   var request = {
@@ -61,8 +63,11 @@ friend.prototype.showDirections = function(){
     if (status == google.maps.DirectionsStatus.OK) {
       current.duration = result.routes[0].legs[0].duration.value;
       current.directionDisplay.setDirections(result);
+      dfd.resolve();
     }
+    else dfd.reject();
   });
+  return dfd.promise();
 }
 
 $(function() {
@@ -114,20 +119,7 @@ $(function() {
   socket.on('updateLocation', function(friendsData) {
     // console.log('location updated');
     for (x in friendsData) {
-      newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)
-      
-      if (friends[x]){
-        friends[x].marker.animation = null;
-        if (newPosition != friends[x].marker.position || friendsData[x].travelMode != friends[x].travelMode) {
-          friends[x].marker.position = newPosition;
-          friends[x].marker.setMap(null);
-          friends[x].marker.setMap(map);
-          friends[x].travelMode = friendsData[x].travelMode; 
-          friends[x].showDirections();
-        }
-        // else console.log('No change to ' + x);
-      }
-      else friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
+      populate(x, friendsData);
     }
   })
 
@@ -136,7 +128,7 @@ $(function() {
     destination.setPosition(new google.maps.LatLng(newDestination.jb, newDestination.kb));
     for (i in friends) {
       // console.log('updating directions for ' + i)
-      friends[i].showDirections();
+      friends[i].showDirections()
     }
   })
 
@@ -151,6 +143,30 @@ $(function() {
 
 function error(msg) {
   // console.log(msg);
+}
+
+function populate (x, friendsData) {
+  var dfd = $.Deferred();
+  newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)     
+  if (friends[x]){
+    friends[x].marker.animation = null;
+    if (newPosition.jb != friends[x].marker.position.jb ||
+        newPosition.kb != friends[x].marker.position.kb ||  
+        friendsData[x].travelMode != friends[x].travelMode) {
+      friends[x].marker.position = newPosition;
+      friends[x].marker.setMap(null);
+      friends[x].marker.setMap(map);
+      friends[x].travelMode = friendsData[x].travelMode; 
+      if (destination.position) friends[x].showDirections();
+      dfd.resolve();
+    }
+    else dfd.resolve();
+  }
+  else {
+    friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
+    dfd.resolve();
+  }
+  return dfd.promise();
 }
 
 function updateGeo(position) {
