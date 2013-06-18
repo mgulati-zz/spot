@@ -62,16 +62,16 @@ io.sockets.on('connection', function (socket) {
   //join the room you wanted to join based on pathname
   room = url.parse(socket.handshake.headers.referer).pathname;
   room = room.slice(1);
-  if (room === "") console.log(socket.id + " joined to the homepage");
+  // if (room === "") console.log(socket.id + " joined to the homepage");
   if (room) {
     socket.join(room);
     rooms[socket.id] = room;
     socket.emit('initialize', friends[room], destination[room], room);
-    console.log(socket.id + " joined " + room + ".");
+    // console.log(socket.id + " joined " + room + ".");
   }
 
   userCount++;
-  console.log('userCount: ' + userCount)
+  // console.log('userCount: ' + userCount)
 
   //when the initial location is sent and room is made
   socket.on('makeRoom', function (room) {
@@ -87,7 +87,7 @@ io.sockets.on('connection', function (socket) {
   //when a person updates their location
   socket.on('showLocation', function (room, myData) {
     if (room) {
-      console.log(myData.color + ' in ' + room + ' updated to ' + myData.position);
+      // console.log(myData.color + ' in ' + room + ' updated to ' + myData.position.jb + "," + myData.position.kb);
       if (!friends[room]) friends[room] = {};
       friends[room][myData.color] = myData;
       colors[socket.id] = myData.color;
@@ -98,7 +98,7 @@ io.sockets.on('connection', function (socket) {
   //when anybody in the room updates the destination, update database and send to all
   socket.on('updateDestination', function (room, latLong) {
     if (room) {
-      console.log('destination in ' + room + ' updated to ' + latLong);
+      // console.log('destination in ' + room + ' updated to ' + latLong.jb + ',' + latLong.kb);
       destination[room] = latLong;
       io.sockets.in(room).emit('sendDestination', destination[room]);
     }
@@ -106,8 +106,8 @@ io.sockets.on('connection', function (socket) {
 
   //take out person from room, delete in dataabse
   socket.on('disconnect', function () {
-    console.log(socket.id + " left " + rooms[socket.id]);
-    console.log('userCount: ' + --userCount)
+    // console.log(socket.id + " left " + rooms[socket.id]);
+    // console.log('userCount: ' + --userCount)
     if (friends[rooms[socket.id]] && friends[rooms[socket.id]][colors[socket.id]]) {
       delete friends[rooms[socket.id]][colors[socket.id]];
       io.sockets.in(rooms[socket.id]).emit('personLeft', colors[socket.id]);

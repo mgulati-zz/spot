@@ -66,8 +66,6 @@ friend.prototype.showDirections = function(){
 }
 
 $(function() {
-  socket = io.connect(window.location.hostname);
-
   var mapOptions = {
     center: new google.maps.LatLng(-34.397, 150.644),
     zoom: 4,
@@ -86,8 +84,9 @@ $(function() {
     changeDest(event.latLng);
   });
 
+  socket = io.connect(window.location.hostname);
   socket.on('initialize', function(friendsData, destinationData, roomData) {
-    console.log('initialization hit for room ' + roomData)
+    // console.log('initialization hit for room ' + roomData)
     thisRoom = roomData;
     
     if (destinationData) 
@@ -95,14 +94,12 @@ $(function() {
 
     for (x in friendsData) {
       newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)
-      currentFriend = new friend(x, newPosition, friendsData[x].travelMode);
-      friends[x] = currentFriend;
-      console.log('friend ' + x + ' added during initialization')
+      friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
+      // console.log('friend ' + x + ' added during initialization')
     }
     
     if (navigator.geolocation) navigator.geolocation.watchPosition(updateGeo, error);
     else error('not supported');
-
   })
 
   socket.on('roomExists', function(room) {
@@ -115,38 +112,45 @@ $(function() {
   })
 
   socket.on('updateLocation', function(friendsData) {
-    console.log('location updated');
+    // console.log('location updated');
     for (x in friendsData) {
       newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)
+      
       if (friends[x]){
         friends[x].marker.animation = null;
-        friends[x].marker.position = newPosition;
-        friends[x].TravelMode = friendsData[x].travelMode;
+        if (newPosition != friends[x].marker.position || friendsData[x].travelMode != friends[x].travelMode) {
+          friends[x].marker.position = newPosition;
+          friends[x].marker.setMap(null);
+          friends[x].marker.setMap(map);
+          friends[x].travelMode = friendsData[x].travelMode; 
+          friends[x].showDirections();
+        }
+        // else console.log('No change to ' + x);
       }
-      else {
-        currentFriend = new friend(x, newPosition, friendsData[x].travelMode);
-        friends[x] = currentFriend;
-      }
+      else friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
     }
   })
 
   socket.on('sendDestination', function(newDestination) {
-    console.log('somebody updated destination');
+    // console.log('somebody updated destination');
     destination.setPosition(new google.maps.LatLng(newDestination.jb, newDestination.kb));
     for (i in friends) {
-      console.log('updating directions for ' + i)
+      // console.log('updating directions for ' + i)
       friends[i].showDirections();
     }
   })
 
   socket.on('personLeft', function(leaveColor) {
-    if (friends[leaveColor])
-      delete friends[leaveColor];
+    if (friends[leaveColor]) {
+      friends[leaveColor].marker.setMap(null);
+      friends[leaveColor].directionDisplay.setMap(null);
+      delete friends[leaveColor]; 
+    }
   })
 });
 
 function error(msg) {
-  console.log(msg);
+  // console.log(msg);
 }
 
 function updateGeo(position) {
@@ -157,20 +161,22 @@ function updateGeo(position) {
     $('#obfuscateMap').hide();
     map.setCenter(latlng)
     map.setZoom(13)
-    initialized = true;
-  }
 
-  console.log('choosing color between ' + friends.length + ' friends')
-  if (!thisColor) {
     for (x in colors) {
       if (!friends[colors[x]]) {
+        // console.log('choose color number ' + x);
         thisColor = colors[x]
         break;
       }
     }
+
+    initialized = true;
   }
-  console.log('sending position to server');
-  socket.emit('showLocation', thisRoom, {color: thisColor, position: latlng});
+
+  // console.log('sending position to server');
+  socket.emit('showLocation', thisRoom, {color: thisColor,
+                                         position: latlng, 
+                                         travelMode: friends[thisColor]? friends[thisColor].travelMode : google.maps.TravelMode.DRIVING});
 }
 
 function changeDest(location) {
