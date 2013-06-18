@@ -66,7 +66,6 @@ io.sockets.on('connection', function (socket) {
   if (room) {
     socket.join(room);
     rooms[socket.id] = room;
-    socket.emit('testing');
     socket.emit('initialize', friends[room], destination[room], room);
     console.log(socket.id + " joined " + room + ".");
   }

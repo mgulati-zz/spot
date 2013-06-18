@@ -1,8 +1,9 @@
-var friends = [];
+var friends = {};
 
 var destination
 var map
 var thisRoom
+var thisColor
 
 var initialized = false;
 
@@ -10,7 +11,7 @@ var socket;
 
 var directionsService = new google.maps.DirectionsService();
 
-var colors = ["Red", "Yellow", "Green", "Blue", "Purple"]
+var colors = ["Red", "Green", "Blue", "Purple"]
 
 var friend = function(Color, Position, TravelMode) {
   this.color = Color;
@@ -21,6 +22,8 @@ var friend = function(Color, Position, TravelMode) {
     map: map,
     suppressMarkers: true,
     suppressInfoWindows: true,
+    preserveViewport: true,
+    suppressBicyclingLayer: true,
     polylineOptions: new google.maps.Polyline({
       strokeColor: this.color
     })
@@ -84,15 +87,22 @@ $(function() {
   });
 
   socket.on('initialize', function(friendsData, destinationData, roomData) {
+    console.log('initialization hit for room ' + roomData)
     thisRoom = roomData;
-    destination.setPosition(destinationData);
+    
+    if (destinationData) 
+      destination.setPosition(new google.maps.LatLng(destinationData.jb, destinationData.kb));
+
     for (x in friendsData) {
-      currentFriend = new friend(x, friendsData[x].position, friendsData[x].travelMode);
+      newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)
+      currentFriend = new friend(x, newPosition, friendsData[x].travelMode);
       friends[x] = currentFriend;
+      console.log('friend ' + x + ' added during initialization')
     }
     
     if (navigator.geolocation) navigator.geolocation.watchPosition(updateGeo, error);
     else error('not supported');
+
   })
 
   socket.on('roomExists', function(room) {
@@ -108,15 +118,25 @@ $(function() {
     console.log('location updated');
     for (x in friendsData) {
       newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)
-      currentFriend = new friend(x, newPosition, friendsData[x].travelMode);
-      friends[x] = currentFriend;
+      if (friends[x]){
+        friends[x].marker.animation = null;
+        friends[x].marker.position = newPosition;
+        friends[x].TravelMode = friendsData[x].travelMode;
+      }
+      else {
+        currentFriend = new friend(x, newPosition, friendsData[x].travelMode);
+        friends[x] = currentFriend;
+      }
     }
   })
 
   socket.on('sendDestination', function(newDestination) {
     console.log('somebody updated destination');
     destination.setPosition(new google.maps.LatLng(newDestination.jb, newDestination.kb));
-    for (i in friends) friends[i].showDirections();
+    for (i in friends) {
+      console.log('updating directions for ' + i)
+      friends[i].showDirections();
+    }
   })
 
   socket.on('personLeft', function(leaveColor) {
@@ -131,6 +151,7 @@ function error(msg) {
 
 function updateGeo(position) {
   var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+  
   if (!initialized) {
     $('#showLocation').hide();
     $('#obfuscateMap').hide();
@@ -138,8 +159,18 @@ function updateGeo(position) {
     map.setZoom(13)
     initialized = true;
   }
-  color = "red";
-  socket.emit('showLocation', thisRoom, {color: color, position: latlng});
+
+  console.log('choosing color between ' + friends.length + ' friends')
+  if (!thisColor) {
+    for (x in colors) {
+      if (!friends[colors[x]]) {
+        thisColor = colors[x]
+        break;
+      }
+    }
+  }
+  console.log('sending position to server');
+  socket.emit('showLocation', thisRoom, {color: thisColor, position: latlng});
 }
 
 function changeDest(location) {
