@@ -63,6 +63,9 @@ friend.prototype.showDirections = function(){
     if (status == google.maps.DirectionsStatus.OK) {
       current.duration = result.routes[0].legs[0].duration.value;
       current.directionDisplay.setDirections(result);
+
+      $('<div>').addClass('progress').attr('width',this.duration .append($('#timeLine')));
+
       dfd.resolve();
     }
     else dfd.reject();
@@ -89,12 +92,18 @@ $(function() {
     changeDest(event.latLng);
   });
 
+  FB.init({appId: '563099440406893', xfbml: true, cookie: true});
+  FB.ui({
+    method: 'send',
+    link: window.location,
+  });     
+
   socket = io.connect(window.location.hostname);
   socket.on('initialize', function(friendsData, destinationData, roomData) {
     // console.log('initialization hit for room ' + roomData)
     thisRoom = roomData;
 
-    $('#joinRoom').hide();
+    // $('#joinRoom').hide();
     $('#showLocation').show();
 
     if (destinationData) 
@@ -111,15 +120,15 @@ $(function() {
 
   })
 
-  socket.on('roomExists', function(room) {
-    if (room == $('.roomBox').text())
-      $('.roomEnter').hide();
-  })
+  // socket.on('roomExists', function(room) {
+  //   if (room == $('.roomBox').text())
+  //     $('.roomEnter').hide();
+  // })
 
-  socket.on('roomOK', function(room) {
-    if (room == $('.roomBox').text());
-      $('.roomEnter').show();
-  })
+  // socket.on('roomOK', function(room) {
+  //   if (room == $('.roomBox').text());
+  //     $('.roomEnter').show();
+  // })
 
   socket.on('roomCreated', function(room) {
     window.history.pushState(null, room, '/' + room);
@@ -149,14 +158,14 @@ $(function() {
     }
   })
 
-  $('.roomBox').keyup(function() {
-    $('.roomEnter').hide();
-    socket.emit('checkRoom', $('.roomBox').val());
-  });  
+  // $('.roomBox').keyup(function() {
+  //   $('.roomEnter').hide();
+  //   socket.emit('checkRoom', $('.roomBox').val());
+  // });  
 
-  $('.roomEnter').click(function() {
-    socket.emit('makeRoom', $('.roomBox').val());
-  });
+  // $('.roomEnter').click(function() {
+  //   socket.emit('makeRoom', $('.roomBox').val());
+  // });
 
 });
 

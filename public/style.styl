@@ -54,29 +54,54 @@ body
   p.small
     font-size 60px
 
-#joinRoom
+// #joinRoom
+//   position absolute
+//   font-family "Segoe UI Light","Helvetica Neue","Segoe UI","Segoe WP", "sans-serif";
+//   font-size 100px
+//   padding 100px 100px
+//   z-index 3
+
+//   p
+//     display: inline;
+
+//   .roomBox
+//     display: inline-block;
+//     background-color: transparent;
+//     border: none;
+//     border-bottom: 2px solid black;
+//     width: 300px;
+//     margin-left: 20px;
+//     font-size: 100px
+
+//   .roomEnter
+//     display none
+//     cursor pointer
+//     height 30px
+//     margin-bottom 10px
+//     margin-left -10px
+
+#timeline
   position absolute
-  font-family "Segoe UI Light","Helvetica Neue","Segoe UI","Segoe WP", "sans-serif";
-  font-size 100px
-  padding 100px 100px
-  z-index 3
+  height 10%
+  width 100%
+  bottom 0px
+  opacity 0.7
+  background-color white
+  z-index 2
 
-  p
-    display: inline;
+  .progress
+    position absolute
+    right 6%
+    border-radius 10px
+    height 3%
+    z-index 3
 
-  .roomBox
-    display: inline-block;
-    background-color: transparent;
-    border: none;
-    border-bottom: 2px solid black;
-    width: 300px;
-    margin-left: 20px;
-    font-size: 100px
-
-  .roomEnter
-    display none
-    cursor pointer
-    height 30px
-    margin-bottom 10px
-    margin-left -10px
-
+  #marker
+    background-image: url("http://www.clker.com/cliparts/b/7/6/5/1308001441853739087google%20maps%20pin.svg");
+    background-size: cover;
+    position: absolute;
+    height: 75%;
+    right: 0;
+    z-index: 3;
+    width: 5%;
+    top: 12.5%;

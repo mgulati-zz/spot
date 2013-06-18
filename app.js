@@ -30,6 +30,16 @@ app.configure(function() {
   app.use(express.static(__dirname + '/public'));
 });
 
+
+const DICTIONARY_FILE = 'words';
+var dictionary = [];
+var fs = require('fs')
+  , dictionary = fs.readFileSync(DICTIONARY_FILE).toString().split("\n");
+function randomWord() {
+  i = Math.floor(Math.random() * (dictionary.length - 1));
+  return dictionary[i];
+}
+
 // Heroku won't actually allow us to use WebSockets
 // so we have to setup polling instead.
 // https://devcenter.heroku.com/articles/using-socket-io-with-node-js-on-heroku
@@ -63,34 +73,39 @@ io.sockets.on('connection', function (socket) {
   room = url.parse(socket.handshake.headers.referer).pathname;
   room = room.slice(1);
   // if (room === "") console.log(socket.id + " joined to the homepage");
-  if (room) {
-    socket.join(room);
-    rooms[socket.id] = room;
-    socket.emit('initialize', friends[room], destination[room], room);
-    // console.log(socket.id + " joined " + room + ".");
+  while (!room) {
+    var possibleRoom = randomWord().toLowerCase();
+    if (!io.sockets.manager.rooms['/'+possibleRoom] && possibleRoom != null && possibleRoom != "") {
+      room = possibleRoom;
+      socket.emit('roomCreated', room);
+    }
   }
+  socket.join(room);
+  rooms[socket.id] = room;
+  socket.emit('initialize', friends[room], destination[room], room);
+    // console.log(socket.id + " joined " + room + ".");
 
   userCount++;
   // console.log('userCount: ' + userCount)
 
   //when the initial location is sent and room is made
-  socket.on('makeRoom', function (room) {
-    if (io.sockets.manager.rooms['/'+room] || room == null || room == "")
-      socket.emit('roomExists', room);
-    else {
-      socket.join(room);
-      rooms[socket.id] = room;
-      socket.emit('roomCreated', room);
-      socket.emit('initialize', null, null, room)
-    }
-  })
+  // socket.on('makeRoom', function (room) {
+  //   if (io.sockets.manager.rooms['/'+room] || room == null || room == "")
+  //     socket.emit('roomExists', room);
+  //   else {
+  //     socket.join(room);
+  //     rooms[socket.id] = room;
+  //     socket.emit('roomCreated', room);
+  //     socket.emit('initialize', null, null, room)
+  //   }
+  // })
 
-  socket.on('checkRoom', function (room) {
-    if (io.sockets.manager.rooms['/'+room] || room == null || room == "")
-      socket.emit('roomExists', room);
-    else 
-      socket.emit('roomOK', room);
-  })
+  // socket.on('checkRoom', function (room) {
+  //   if (io.sockets.manager.rooms['/'+room] || room == null || room == "")
+  //     socket.emit('roomExists', room);
+  //   else 
+  //     socket.emit('roomOK', room);
+  // })
 
   //when a person updates their location
   socket.on('showLocation', function (room, myData) {
