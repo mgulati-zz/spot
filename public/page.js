@@ -93,7 +93,10 @@ $(function() {
   socket.on('initialize', function(friendsData, destinationData, roomData) {
     // console.log('initialization hit for room ' + roomData)
     thisRoom = roomData;
-    
+
+    $('#joinRoom').hide();
+    $('#showLocation').show();
+
     if (destinationData) 
       destination.setPosition(new google.maps.LatLng(destinationData.jb, destinationData.kb));
 
@@ -105,14 +108,20 @@ $(function() {
     
     if (navigator.geolocation) navigator.geolocation.watchPosition(updateGeo, error);
     else error('not supported');
+
   })
 
   socket.on('roomExists', function(room) {
+    if (room == $('.roomBox').text())
+      $('.roomEnter').hide();
+  })
 
+  socket.on('roomOK', function(room) {
+    if (room == $('.roomBox').text());
+      $('.roomEnter').show();
   })
 
   socket.on('roomCreated', function(room) {
-    thisRoom = room;
     window.history.pushState(null, room, '/' + room);
   })
 
@@ -139,6 +148,16 @@ $(function() {
       delete friends[leaveColor]; 
     }
   })
+
+  $('.roomBox').keyup(function() {
+    $('.roomEnter').hide();
+    socket.emit('checkRoom', $('.roomBox').val());
+  });  
+
+  $('.roomEnter').click(function() {
+    socket.emit('makeRoom', $('.roomBox').val());
+  });
+
 });
 
 function error(msg) {

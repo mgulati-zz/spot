@@ -75,13 +75,21 @@ io.sockets.on('connection', function (socket) {
 
   //when the initial location is sent and room is made
   socket.on('makeRoom', function (room) {
-    if (io.sockets.manager.rooms['/'+room])
+    if (io.sockets.manager.rooms['/'+room] || room == null || room == "")
       socket.emit('roomExists', room);
     else {
       socket.join(room);
       rooms[socket.id] = room;
       socket.emit('roomCreated', room);
+      socket.emit('initialize', null, null, room)
     }
+  })
+
+  socket.on('checkRoom', function (room) {
+    if (io.sockets.manager.rooms['/'+room] || room == null || room == "")
+      socket.emit('roomExists', room);
+    else 
+      socket.emit('roomOK', room);
   })
 
   //when a person updates their location
@@ -119,7 +127,8 @@ io.sockets.on('connection', function (socket) {
 app.get('/:room?', function(req, res, next){
   if (req.params.room && 
       (req.params.room.indexOf(".js", req.params.room.length - ".js".length) !== -1 ||
-      req.params.room.indexOf(".css", req.params.room.length - ".css".length) !== -1))
+      req.params.room.indexOf(".css", req.params.room.length - ".css".length) !== -1 ||
+      req.params.room.indexOf(".png", req.params.room.length - ".png".length) !== -1))
         next();
   else {
     res.render('page.jade');
