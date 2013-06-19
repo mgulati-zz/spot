@@ -6,6 +6,7 @@ var thisRoom
 var thisColor
 
 var initialized = false;
+var firstBounds;
 
 var socket;
 
@@ -64,7 +65,12 @@ friend.prototype.showDirections = function(){
       current.duration = result.routes[0].legs[0].duration.value;
       current.directionDisplay.setDirections(result);
 
-      $('<div>').addClass('progress').attr('width',this.duration .append($('#timeLine')));
+      if ($('#' + current.color + 'progress').length == 0)
+        $('<div>').attr('id',current.color + 'progress').addClass('progress')
+          .css('width', current.duration + 'px').css('background-color',current.color)
+          .appendTo($('#timeline'));
+
+      $('#' + current.color + 'progress').css('width', current.duration);
 
       dfd.resolve();
     }
@@ -93,10 +99,11 @@ $(function() {
   });
 
   FB.init({appId: '563099440406893', xfbml: true, cookie: true});
-  FB.ui({
-    method: 'send',
-    link: window.location,
-  });     
+  // FB.ui({
+  //   method: 'send',
+  //   link: 'http://indayspot.herokuapp.com/' + thisRoom,
+  //   redirect_uri: 'http://indayspot.herokuapp.com/' + thisRoom
+  // });
 
   socket = io.connect(window.location.hostname);
   socket.on('initialize', function(friendsData, destinationData, roomData) {
@@ -106,14 +113,22 @@ $(function() {
     // $('#joinRoom').hide();
     $('#showLocation').show();
 
-    if (destinationData) 
+    firstBounds = new google.maps.LatLngBounds();
+
+    if (destinationData) {
       destination.setPosition(new google.maps.LatLng(destinationData.jb, destinationData.kb));
+      firstBounds.extend(destination.position);
+    }
 
     for (x in friendsData) {
       newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)
       friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
-      // console.log('friend ' + x + ' added during initialization')
+      firstBounds.extend(friends[x].marker.position);
     }
+
+    map.fitBounds(firstBounds);
+    map.setCenter(firstBounds.getCenter());
+    zoomOut();
     
     if (navigator.geolocation) navigator.geolocation.watchPosition(updateGeo, error);
     else error('not supported');
@@ -148,12 +163,15 @@ $(function() {
       // console.log('updating directions for ' + i)
       friends[i].showDirections()
     }
+    positionMap();
   })
 
   socket.on('personLeft', function(leaveColor) {
     if (friends[leaveColor]) {
       friends[leaveColor].marker.setMap(null);
       friends[leaveColor].directionDisplay.setMap(null);
+      if ($('#' + friends[leaveColor].color + 'progress').length > 0)
+        $('#' + friends[leaveColor].color + 'progress').remove();
       delete friends[leaveColor]; 
     }
   })
@@ -168,6 +186,16 @@ $(function() {
   // });
 
 });
+
+function positionMap() {
+  var bounds = new google.maps.LatLngBounds();
+  for (x in friends)
+    bounds.extend(friends[x].marker.position);
+  bounds.extend(destination.position);
+  map.fitBounds(bounds);
+  map.setCenter(bounds.getCenter());
+  zoomOut();
+}
 
 function error(msg) {
   // console.log(msg);
@@ -197,9 +225,15 @@ function populate (x, friendsData) {
   return dfd.promise();
 }
 
+function zoomOut() {
+  var listener = google.maps.event.addListener(map, "idle", function() { 
+    map.setZoom(map.getZoom()-1); 
+    google.maps.event.removeListener(listener); 
+  });
+}
+
 function updateGeo(position) {
   var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-  
   if (!initialized) {
     $('#showLocation').hide();
     $('#obfuscateMap').hide();
@@ -212,6 +246,13 @@ function updateGeo(position) {
         thisColor = colors[x]
         break;
       }
+    }
+
+    if (firstBounds) {
+      firstBounds.extend(latlng);
+      map.fitBounds(firstBounds);
+      map.setCenter(firstBounds.getCenter());
+      zoomOut();
     }
 
     initialized = true;

@@ -18,7 +18,7 @@ function compile(str, path) {
 }
   
 app.configure(function() {
-  app.set('port', process.env.PORT || 3000);
+  app.set('port', process.env.PORT || 80);
   app.use(express.favicon());
   app.use(app.router);
   app.set('views', __dirname + '/public');
