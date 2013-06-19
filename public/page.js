@@ -105,7 +105,7 @@ $(function() {
   //   redirect_uri: 'http://indayspot.herokuapp.com/' + thisRoom
   // });
 
-  socket = io.connect(window.location.hostname);
+  socket = io.connect(window.location.hostname, {'sync disconnect on unload' : true});
   socket.on('initialize', function(friendsData, destinationData, roomData) {
     // console.log('initialization hit for room ' + roomData)
     thisRoom = roomData;
