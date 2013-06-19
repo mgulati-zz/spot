@@ -128,7 +128,6 @@ $(function() {
 
     map.fitBounds(firstBounds);
     map.setCenter(firstBounds.getCenter());
-    zoomOut();
     
     if (navigator.geolocation) navigator.geolocation.watchPosition(updateGeo, error);
     else error('not supported');
@@ -194,7 +193,6 @@ function positionMap() {
   bounds.extend(destination.position);
   map.fitBounds(bounds);
   map.setCenter(bounds.getCenter());
-  zoomOut();
 }
 
 function error(msg) {
@@ -225,13 +223,6 @@ function populate (x, friendsData) {
   return dfd.promise();
 }
 
-function zoomOut() {
-  var listener = google.maps.event.addListener(map, "idle", function() { 
-    map.setZoom(map.getZoom()-1); 
-    google.maps.event.removeListener(listener); 
-  });
-}
-
 function updateGeo(position) {
   var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
   if (!initialized) {
@@ -252,7 +243,6 @@ function updateGeo(position) {
       firstBounds.extend(latlng);
       map.fitBounds(firstBounds);
       map.setCenter(firstBounds.getCenter());
-      zoomOut();
     }
 
     initialized = true;
