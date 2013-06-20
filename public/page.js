@@ -15,7 +15,7 @@ var socket;
 var directionsService = new google.maps.DirectionsService();
 google.maps.visualRefresh = true;
 
-var colors = ["53e8bc", "fe8535", "fedc6f", "30a2a4", "5800ef", "efeba5"]
+var colors = ["4574b5","bb293c","a63f5d","019191","e77a05"]
 
 $.tinysort.defaults.order = 'desc';
 $.tinysort.defaults.attr = 'seconds';
@@ -210,15 +210,15 @@ $(function() {
     switch (modeSelector.attr('mode')) {
       case 'DRIVING':
         modeSelector.attr('mode','BICYCLING');
-        modeSelector.css('background-position', '-144px 0');
+        modeSelector.css('background-position', '0px -2px');
         break;
       case 'BICYCLING':
         modeSelector.attr('mode','WALKING');
-        modeSelector.css('background-position', '-48px 0');
+        modeSelector.css('background-position', '-120px -2px');
         break;
       case 'WALKING':
         modeSelector.attr('mode','DRIVING');
-        modeSelector.css('background-position', '-96px 0');       
+        modeSelector.css('background-position', '-60px -2px');       
         break;  
     }
 
@@ -229,7 +229,7 @@ $(function() {
 
   shareButton = $('#share');
   shareButton.click(function() {
-    window.location = "https://www.facebook.com/dialog/send?app_id=563099440406893&link=" + 
+    window.location = "https://www.facebook.com/dialog/send?app_id=563099440406893&name=Join%20your%20friends%20trip&link=" + 
       window.location + "&redirect_uri=" + window.location;
   })
 
@@ -278,7 +278,7 @@ function updateGeo(position) {
 
     for (x in colors) {
       if (!friends[colors[x]]) {
-        thisColor = colors[x]
+        thisColor = colors[x];
         break;
       }
     }
@@ -292,6 +292,8 @@ function updateGeo(position) {
     initialized = true;
   }
 
+  $('#travelMode').css('backgroundImage', "url('" + thisColor + ".png')");
+  $('#travelMode').css('display', 'block');
   $('#showLocation').hide();
   $('#obfuscateMap').hide();
   $('#travelMode').show();
