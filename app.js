@@ -44,8 +44,8 @@ function randomWord() {
 // so we have to setup polling instead.
 // https://devcenter.heroku.com/articles/using-socket-io-with-node-js-on-heroku
 io.configure(function () {
-  io.set("transports", ["xhr-polling"]);
-  io.set("polling duration", 10);
+  // io.set("transports", ["xhr-polling"]);
+  // io.set("polling duration", 10);
   io.set('log level', 1);
 
   //Set up handshake data for joining room
@@ -120,7 +120,7 @@ io.sockets.on('connection', function (socket) {
   //when anybody in the room updates the destination, update database and send to all
   socket.on('updateDestination', function (room, latLong) {
     if (room) {
-      console.log('destination in ' + room + ' updated to ' + latLong.jb + ',' + latLong.kb);
+      // console.log('destination in ' + room + ' updated to ' + latLong.jb + ',' + latLong.kb);
       destination[room] = latLong;
       io.sockets.in(room).emit('sendDestination', destination[room]);
     }
@@ -139,14 +139,8 @@ io.sockets.on('connection', function (socket) {
 
 //routing, if css and javascript send file, otherwise render the page
 app.get('/:room?', function(req, res, next){
-  if (req.params.room && 
-      (req.params.room.indexOf(".js", req.params.room.length - ".js".length) !== -1 ||
-      req.params.room.indexOf(".css", req.params.room.length - ".css".length) !== -1 ||
-      req.params.room.indexOf(".png", req.params.room.length - ".png".length) !== -1))
-        next();
-  else {
-    res.render('page.jade');
-  }
+  if (req.params.room && req.params.room.indexOf(".") !== -1) next();
+  else res.render('page.jade');
 });
 
 server.listen(app.get('port'));

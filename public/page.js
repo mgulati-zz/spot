@@ -8,11 +8,16 @@ var thisColor
 var initialized = false;
 var firstBounds;
 
+increment = 1800;
+
 var socket;
 
 var directionsService = new google.maps.DirectionsService();
 
 var colors = ["Red", "Green", "Blue", "Purple"]
+
+$.tinysort.defaults.order = 'desc';
+$.tinysort.defaults.attr = 'seconds';
 
 var friend = function(Color, Position, TravelMode) {
   this.color = Color;
@@ -44,10 +49,8 @@ var friend = function(Color, Position, TravelMode) {
       strokeColor: "black",
       strokeWeight: 1,
       scale: 4
-    },
+    }
   });
-
-  if (destination.position) this.showDirections();
 }
 
 friend.prototype.showDirections = function(){
@@ -70,7 +73,12 @@ friend.prototype.showDirections = function(){
           .css('width', current.duration + 'px').css('background-color',current.color)
           .appendTo($('#timeline'));
 
-      $('#' + current.color + 'progress').css('width', current.duration);
+      timeToShow = (current.duration < 100)? current.duration + 's' :
+                   (current.duration < 6000)? Math.ceil(current.duration/60) + 'm' :
+                   Math.ceil(current.duration/3600) + 'h' 
+
+      $('#' + current.color + 'progress').attr('time', timeToShow);
+      $('#' + current.color + 'progress').attr('seconds', current.duration);
 
       dfd.resolve();
     }
@@ -98,7 +106,7 @@ $(function() {
     changeDest(event.latLng);
   });
 
-  FB.init({appId: '563099440406893', xfbml: true, cookie: true});
+  // FB.init({appId: '563099440406893', xfbml: true, cookie: true});
   // FB.ui({
   //   method: 'send',
   //   link: 'http://indayspot.herokuapp.com/' + thisRoom,
@@ -123,6 +131,7 @@ $(function() {
     for (x in friendsData) {
       newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)
       friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
+      friends[x].showDirections();
       firstBounds.extend(friends[x].marker.position);
     }
 
@@ -150,19 +159,43 @@ $(function() {
 
   socket.on('updateLocation', function(friendsData) {
     // console.log('location updated');
+    var promises = []
+    
     for (x in friendsData) {
-      populate(x, friendsData);
+      promises.push(populate(x, friendsData));
     }
+
+    $.when.apply($, promises).then(function() {
+      var durations = $("div[id$='progress']").map(function() { return this.getAttribute('seconds') }).get();
+      maxDuration = Math.max.apply(null, durations);
+      currentWindow = (Math.ceil(maxDuration/increment)*increment);
+      $("div[id$='progress']").tsort();       
+      for (x in friends) {
+        widthPercent = (friends[x].duration/currentWindow)*90;
+        $('#' + x + 'progress').css('width', widthPercent.toString() + '%');  
+      }  
+    })
+
   })
 
   socket.on('sendDestination', function(newDestination) {
     // console.log('somebody updated destination');
     destination.setPosition(new google.maps.LatLng(newDestination.jb, newDestination.kb));
+    var promises = []
     for (i in friends) {
-      // console.log('updating directions for ' + i)
-      friends[i].showDirections()
+      promises.push(friends[i].showDirections());
     }
-    positionMap();
+    $.when.apply($, promises).then(function() {
+      positionMap();
+      var durations = $("div[id$='progress']").map(function() { return this.getAttribute('seconds') }).get();
+      maxDuration = Math.max.apply(null, durations);
+      currentWindow = (Math.ceil(maxDuration/increment)*increment);
+      $("div[id$='progress']").tsort();       
+      for (x in friends) {
+        widthPercent = (friends[x].duration/currentWindow)*90;
+        $('#' + x + 'progress').css('width', widthPercent.toString() + '%');  
+      }  
+    })
   })
 
   socket.on('personLeft', function(leaveColor) {
@@ -211,14 +244,14 @@ function populate (x, friendsData) {
       friends[x].marker.setMap(null);
       friends[x].marker.setMap(map);
       friends[x].travelMode = friendsData[x].travelMode; 
-      if (destination.position) friends[x].showDirections();
-      dfd.resolve();
+      if (destination.position) 
+        $.when(friends[x].showDirections()).then(dfd.resolve());
     }
     else dfd.resolve();
   }
   else {
     friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
-    dfd.resolve();
+    $.when(friends[x].showDirections()).then(dfd.resolve());
   }
   return dfd.promise();
 }
@@ -226,14 +259,9 @@ function populate (x, friendsData) {
 function updateGeo(position) {
   var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
   if (!initialized) {
-    $('#showLocation').hide();
-    $('#obfuscateMap').hide();
-    map.setCenter(latlng)
-    map.setZoom(13)
 
     for (x in colors) {
       if (!friends[colors[x]]) {
-        // console.log('choose color number ' + x);
         thisColor = colors[x]
         break;
       }
@@ -247,6 +275,9 @@ function updateGeo(position) {
 
     initialized = true;
   }
+
+  $('#showLocation').hide();
+  $('#obfuscateMap').hide();
 
   // console.log('sending position to server');
   socket.emit('showLocation', thisRoom, {color: thisColor,
