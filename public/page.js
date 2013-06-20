@@ -13,8 +13,9 @@ increment = 1800;
 var socket;
 
 var directionsService = new google.maps.DirectionsService();
+google.maps.visualRefresh = true;
 
-var colors = ["Red", "Green", "Blue", "Purple"]
+var colors = ["Red", "Green", "Blue", "Purple", "Black", "Orange"]
 
 $.tinysort.defaults.order = 'desc';
 $.tinysort.defaults.attr = 'seconds';
@@ -216,6 +217,27 @@ $(function() {
   // $('.roomEnter').click(function() {
   //   socket.emit('makeRoom', $('.roomBox').val());
   // });
+  modeSelector = $('#travelMode');
+  modeSelector.click(function() {
+    switch (modeSelector.attr('mode')) {
+      case 'DRIVING':
+        modeSelector.attr('mode','BICYCLING');
+        modeSelector.css('background-position', '-144px 0');
+        break;
+      case 'BICYCLING':
+        modeSelector.attr('mode','WALKING');
+        modeSelector.css('background-position', '-48px 0');
+        break;
+      case 'WALKING':
+        modeSelector.attr('mode','DRIVING');
+        modeSelector.css('background-position', '-96px 0');       
+        break;  
+    }
+
+    socket.emit('showLocation', thisRoom, {color: thisColor,
+                                         position: friends[thisColor].marker.position, 
+                                         travelMode: modeSelector.attr('mode')});
+  });
 
 });
 
@@ -278,6 +300,7 @@ function updateGeo(position) {
 
   $('#showLocation').hide();
   $('#obfuscateMap').hide();
+  $('#travelMode').show();
 
   // console.log('sending position to server');
   socket.emit('showLocation', thisRoom, {color: thisColor,
