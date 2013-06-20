@@ -15,10 +15,18 @@ var socket;
 var directionsService = new google.maps.DirectionsService();
 google.maps.visualRefresh = true;
 
-var colors = ["Red", "Green", "Blue", "Purple", "Black", "Orange"]
+var colors = ["53e8bc", "fe8535", "fedc6f", "30a2a4", "5800ef", "efeba5"]
 
 $.tinysort.defaults.order = 'desc';
 $.tinysort.defaults.attr = 'seconds';
+
+var styles = [
+  {
+    "stylers": [
+      { "saturation": -100 }
+    ]
+  }
+]
 
 var friend = function(Color, Position, TravelMode) {
   this.color = Color;
@@ -33,7 +41,8 @@ var friend = function(Color, Position, TravelMode) {
     suppressBicyclingLayer: true,
     polylineOptions: new google.maps.Polyline({
       strokeColor: this.color,
-      strokeOpacity: 0.6
+      strokeOpacity: 0.9,
+      strokeWeight: 5
     })
   });
 
@@ -71,7 +80,7 @@ friend.prototype.showDirections = function(){
 
       if ($('#' + current.color + 'progress').length == 0)
         $('<div>').attr('id',current.color + 'progress').addClass('progress')
-          .css('width', current.duration + 'px').css('background-color',current.color)
+          .css('width', current.duration + 'px').css('background-color', '#' + current.color)
           .appendTo($('#timeline'));
 
       timeToShow = (current.duration < 100)? current.duration + 's' :
@@ -90,13 +99,14 @@ friend.prototype.showDirections = function(){
 
 $(function() {
   var mapOptions = {
-    center: new google.maps.LatLng(-34.397, 150.644),
-    zoom: 4,
+    center: new google.maps.LatLng(32.52828936482526,-118.32275390625),
+    zoom: 7,
     mapTypeId: google.maps.MapTypeId.ROADMAP,
     disableDefaultUI: true
   };
   
   map = new google.maps.Map(document.getElementById("mapCanvas"), mapOptions);
+  map.setOptions({styles: styles});
 
   destination = new google.maps.Marker({
     animation: google.maps.Animation.DROP,
@@ -107,26 +117,19 @@ $(function() {
     changeDest(event.latLng);
   });
 
-  // FB.init({appId: '563099440406893', xfbml: true, cookie: true});
-  // FB.ui({
-  //   method: 'send',
-  //   link: 'http://indayspot.herokuapp.com/' + thisRoom,
-  //   redirect_uri: 'http://indayspot.herokuapp.com/' + thisRoom
-  // });
-
   socket = io.connect(window.location.hostname, {'sync disconnect on unload' : true});
   socket.on('initialize', function(friendsData, destinationData, roomData) {
-    // console.log('initialization hit for room ' + roomData)
     thisRoom = roomData;
 
-    // $('#joinRoom').hide();
     $('#showLocation').show();
 
     firstBounds = new google.maps.LatLngBounds();
+    var boundsExist = false;
 
     if (destinationData) {
       destination.setPosition(new google.maps.LatLng(destinationData.jb, destinationData.kb));
       firstBounds.extend(destination.position);
+      boundsExist = true;
     }
 
     for (x in friendsData) {
@@ -134,25 +137,18 @@ $(function() {
       friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
       friends[x].showDirections();
       firstBounds.extend(friends[x].marker.position);
+      boundsExist = true;
     }
 
-    map.fitBounds(firstBounds);
-    map.setCenter(firstBounds.getCenter());
+    if (boundsExist) {
+      map.fitBounds(firstBounds);
+      map.setCenter(firstBounds.getCenter());
+    }
     
     if (navigator.geolocation) navigator.geolocation.watchPosition(updateGeo, error);
     else error('not supported');
 
   })
-
-  // socket.on('roomExists', function(room) {
-  //   if (room == $('.roomBox').text())
-  //     $('.roomEnter').hide();
-  // })
-
-  // socket.on('roomOK', function(room) {
-  //   if (room == $('.roomBox').text());
-  //     $('.roomEnter').show();
-  // })
 
   socket.on('roomCreated', function(room) {
     window.history.pushState(null, room, '/' + room);
@@ -209,14 +205,6 @@ $(function() {
     }
   })
 
-  // $('.roomBox').keyup(function() {
-  //   $('.roomEnter').hide();
-  //   socket.emit('checkRoom', $('.roomBox').val());
-  // });  
-
-  // $('.roomEnter').click(function() {
-  //   socket.emit('makeRoom', $('.roomBox').val());
-  // });
   modeSelector = $('#travelMode');
   modeSelector.click(function() {
     switch (modeSelector.attr('mode')) {
@@ -238,6 +226,12 @@ $(function() {
                                          position: friends[thisColor].marker.position, 
                                          travelMode: modeSelector.attr('mode')});
   });
+
+  shareButton = $('#share');
+  shareButton.click(function() {
+    window.location = "https://www.facebook.com/dialog/send?app_id=563099440406893&link=" + 
+      window.location + "&redirect_uri=" + window.location;
+  })
 
 });
 
@@ -301,6 +295,7 @@ function updateGeo(position) {
   $('#showLocation').hide();
   $('#obfuscateMap').hide();
   $('#travelMode').show();
+  $('#share').show();
 
   // console.log('sending position to server');
   socket.emit('showLocation', thisRoom, {color: thisColor,

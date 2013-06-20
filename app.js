@@ -87,25 +87,6 @@ io.sockets.on('connection', function (socket) {
   userCount++;
   console.log('userCount: ' + userCount)
 
-  //when the initial location is sent and room is made
-  // socket.on('makeRoom', function (room) {
-  //   if (io.sockets.manager.rooms['/'+room] || room == null || room == "")
-  //     socket.emit('roomExists', room);
-  //   else {
-  //     socket.join(room);
-  //     rooms[socket.id] = room;
-  //     socket.emit('roomCreated', room);
-  //     socket.emit('initialize', null, null, room)
-  //   }
-  // })
-
-  // socket.on('checkRoom', function (room) {
-  //   if (io.sockets.manager.rooms['/'+room] || room == null || room == "")
-  //     socket.emit('roomExists', room);
-  //   else 
-  //     socket.emit('roomOK', room);
-  // })
-
   //when a person updates their location
   socket.on('showLocation', function (room, myData) {
     if (room) {
@@ -120,7 +101,7 @@ io.sockets.on('connection', function (socket) {
   //when anybody in the room updates the destination, update database and send to all
   socket.on('updateDestination', function (room, latLong) {
     if (room) {
-      // console.log('destination in ' + room + ' updated to ' + latLong.jb + ',' + latLong.kb);
+      console.log('destination in ' + room + ' updated to ' + latLong.jb + ',' + latLong.kb);
       destination[room] = latLong;
       io.sockets.in(room).emit('sendDestination', destination[room]);
     }

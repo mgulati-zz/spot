@@ -36,13 +36,14 @@ body
   position absolute
   height 100%
   width 100%
-  background-color orange
-  opacity 0.2
+  background-color #53e8bc
+  opacity 0.4
   z-index 2
 
 #showLocation
   position absolute
   font-family "Segoe UI Light","Helvetica Neue","Segoe UI","Segoe WP", "sans-serif";
+  color white
   font-size 100px
   padding 100px 100px
   z-index 3
@@ -50,54 +51,36 @@ body
 
   p.step
     padding-bottom: 20px
+    font-weight bold
+
+  p.tell
+    font-weight bold
 
   p.small
     font-size 60px
-
-// #joinRoom
-//   position absolute
-//   font-family "Segoe UI Light","Helvetica Neue","Segoe UI","Segoe WP", "sans-serif";
-//   font-size 100px
-//   padding 100px 100px
-//   z-index 3
-
-//   p
-//     display: inline;
-
-//   .roomBox
-//     display: inline-block;
-//     background-color: transparent;
-//     border: none;
-//     border-bottom: 2px solid black;
-//     width: 300px;
-//     margin-left: 20px;
-//     font-size: 100px
-
-//   .roomEnter
-//     display none
-//     cursor pointer
-//     height 30px
-//     margin-bottom 10px
-//     margin-left -10px
+    padding-top 10px
+    padding-left 10px
 
 #timeline
   position: absolute;
-  min-height: 7%;
+  min-height: 10%;
   width: 100%;
   bottom: 0;
-  opacity: .7;
+  opacity: .95;
   background-color: #fff;
   z-index: 2;
-  padding-top: 0.5%;
+  padding-top: 1.2%;
 
   .progress
     position: relative;
     border-radius: 10px;
-    height: 5px;
-    margin-bottom: 5px;
+    height: 6px;
+    margin-bottom: 12px;
     display: block;
     margin-right: 6%;
     margin-left: auto;
+    z-index: 3
+    opacity 1
 
     &::before
       content: attr(time);
@@ -118,14 +101,14 @@ body
       margin-bottom: 2%
 
   #marker
-    background-image: url("http://www.clker.com/cliparts/b/7/6/5/1308001441853739087google%20maps%20pin.svg");
+    background-image: url(/'marker.png');
     background-size: cover;
     position: absolute;
     height: 75%;
-    right: 0;
+    right: 5px;
     z-index: 3;
     width: 5%;
-    top: 5%;
+    top: 15%;
 
 #travelMode
   height 30px
@@ -138,3 +121,17 @@ body
   background-position: -96px 0;
   z-index 3;
   display none
+  cursor pointer
+
+#share
+  height 30px
+  width 30px
+  position absolute
+  top 15px
+  right 60px
+  background: transparent url('//maps.gstatic.com/tactile/directions/travel_mode/sprite-1x.png') no-repeat 0 0;
+  background-size: 240px 30px;
+  background-position: -96px 0;
+  z-index 3;
+  display none
+  cursor pointer
