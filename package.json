@@ -1,25 +1,25 @@
 {
   "name": "spot",
   "author": "m",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "private": true,
   "dependencies": {
-    "stylus": "0.32.0",
-    "express": "3.1.0",
-    "node-gcm": "0.9.3",
-    "socket.io": "0.9.13",
-    "nib": "0.9.1",
-    "jade": "0.28.1"
+    "stylus": "~0.32.1",
+    "express": "~3.2.6",
+    "node-gcm": "~0.9.6",
+    "socket.io": "~0.9.16",
+    "nib": "~0.9.1",
+    "jade": "~0.31.2"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mgulati/spot.git"
+    "url": "https://github.com/mgulati/Lesia-Personal-Site"
   },
   "engines": {
-    "node": "0.8.x",
-    "npm": "1.1.x"
+    "node": "0.10.12",
+    "npm": "1.3.0"
   },
-  "subdomain": "spot",
+  "subdomain": "lesianalepa",
   "scripts": {
     "start": "app.js"
   }
