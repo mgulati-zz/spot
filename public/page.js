@@ -102,7 +102,8 @@ $(function() {
     center: new google.maps.LatLng(32.52828936482526,-118.32275390625),
     zoom: 7,
     mapTypeId: google.maps.MapTypeId.ROADMAP,
-    disableDefaultUI: true
+    mapTypeControl: false,
+    streetViewControl: false,
   };
   
   map = new google.maps.Map(document.getElementById("mapCanvas"), mapOptions);
@@ -162,6 +163,9 @@ $(function() {
       promises.push(populate(x, friendsData));
     }
 
+    if (Object.keys(friendsData).length < 2) $('#shareTooltip').show();
+    else $('#shareTooltip').hide();
+
     $.when.apply($, promises).then(function() {
       var durations = $("div[id$='progress']").map(function() { return this.getAttribute('seconds') }).get();
       maxDuration = Math.max.apply(null, durations);
@@ -178,6 +182,7 @@ $(function() {
   socket.on('sendDestination', function(newDestination) {
     // console.log('somebody updated destination');
     destination.setPosition(new google.maps.LatLng(newDestination.jb, newDestination.kb));
+    $('#destTooltip').hide();
     var promises = []
     for (i in friends) {
       promises.push(friends[i].showDirections());
@@ -201,7 +206,8 @@ $(function() {
       friends[leaveColor].directionDisplay.setMap(null);
       if ($('#' + friends[leaveColor].color + 'progress').length > 0)
         $('#' + friends[leaveColor].color + 'progress').remove();
-      delete friends[leaveColor]; 
+      delete friends[leaveColor];
+      if (Object.keys(friends).length < 2) $('#shareTooltip').show(); 
     }
   })
 
@@ -229,8 +235,9 @@ $(function() {
 
   shareButton = $('#share');
   shareButton.click(function() {
+    shareUrl = window.location.origin + window.location.pathname;
     window.location = "https://www.facebook.com/dialog/send?app_id=563099440406893&name=Join%20your%20friends%20trip&link=" + 
-      window.location + "&redirect_uri=" + window.location;
+      shareUrl + "&redirect_uri=" + shareUrl;
   })
 
 });
@@ -285,9 +292,13 @@ function updateGeo(position) {
 
     if (firstBounds) {
       firstBounds.extend(latlng);
-      map.fitBounds(firstBounds);
       map.setCenter(firstBounds.getCenter());
+      if (Object.keys(friends).length > 1) map.fitBounds(firstBounds);
+      else map.setZoom(16);
     }
+
+    if (!destination.position) $('#destTooltip').show();
+    if (Object.keys(friends).length < 2) $('#shareTooltip').show(); 
 
     initialized = true;
   }
