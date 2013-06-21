@@ -15,7 +15,7 @@ var socket;
 var directionsService = new google.maps.DirectionsService();
 google.maps.visualRefresh = true;
 
-var colors = ["4574b5","bb293c","a63f5d","019191","e77a05"]
+var colors = ["4574b5","bb293c","019191","e77a05","a63f5d"]
 
 $.tinysort.defaults.order = 'desc';
 $.tinysort.defaults.attr = 'seconds';
@@ -108,6 +108,18 @@ $(function() {
   
   map = new google.maps.Map(document.getElementById("mapCanvas"), mapOptions);
   map.setOptions({styles: styles});
+  google.maps.event.addListener(map, 'zoom_changed', function() {
+    zoomChangeBoundsListener = 
+      google.maps.event.addListener(map, 'bounds_changed', function(event) {
+        if (this.getZoom() > 15 && this.initialZoom == true) {
+            // Change max/min zoom here
+            this.setZoom(15);
+            this.initialZoom = false;
+        }
+        google.maps.event.removeListener(zoomChangeBoundsListener);
+      });
+  });
+  map.initialZoom = true;
 
   destination = new google.maps.Marker({
     animation: google.maps.Animation.DROP,
@@ -293,8 +305,7 @@ function updateGeo(position) {
     if (firstBounds) {
       firstBounds.extend(latlng);
       map.setCenter(firstBounds.getCenter());
-      if (Object.keys(friends).length > 1) map.fitBounds(firstBounds);
-      else map.setZoom(16);
+      map.fitBounds(firstBounds);
     }
 
     if (!destination.position) $('#destTooltip').show();
