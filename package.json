@@ -13,13 +13,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mgulati/Lesia-Personal-Site"
+    "url": "https://github.com/mgulati/spot.git"
   },
   "engines": {
     "node": "0.10.12",
-    "npm": "1.3.0"
+    "npm": "1.2.30"
   },
-  "subdomain": "lesianalepa",
+  "subdomain": "spot",
   "scripts": {
     "start": "app.js"
   }
