@@ -40,21 +40,6 @@ function randomWord() {
   return dictionary[i];
 }
 
-// Heroku won't actually allow us to use WebSockets
-// so we have to setup polling instead.
-// https://devcenter.heroku.com/articles/using-socket-io-with-node-js-on-heroku
-io.configure(function () {
-  // io.set("transports", ["xhr-polling"]);
-  // io.set("polling duration", 10);
-  io.set('log level', 1);
-
-  //Set up handshake data for joining room
-  io.set('authorization', function (handshakeData, callback) {
-    callback(null, true); 
-  });
-
-});
-
 //the entire database is just javascript variables
 var friends = {};
 var colors = {};
