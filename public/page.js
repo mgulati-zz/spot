@@ -40,7 +40,7 @@ var friend = function(Color, Position, TravelMode) {
     preserveViewport: true,
     suppressBicyclingLayer: true,
     polylineOptions: new google.maps.Polyline({
-      strokeColor: this.color,
+      strokeColor: '#' + this.color,
       strokeOpacity: 0.9,
       strokeWeight: 5
     })
@@ -54,7 +54,7 @@ var friend = function(Color, Position, TravelMode) {
     position: Position,
     icon: {
       path: google.maps.SymbolPath.CIRCLE,
-      fillColor: this.color,
+      fillColor: '#' + this.color,
       fillOpacity: 1,
       strokeColor: "black",
       strokeWeight: 1,
@@ -66,7 +66,7 @@ var friend = function(Color, Position, TravelMode) {
 friend.prototype.showDirections = function(){
   var dfd = $.Deferred();
   var current = this;
-
+  
   var request = {
     origin: current.marker.position,
     destination: destination.position,
@@ -140,13 +140,13 @@ $(function() {
     var boundsExist = false;
 
     if (destinationData) {
-      destination.setPosition(new google.maps.LatLng(destinationData.jb, destinationData.kb));
+      destination.setPosition(new google.maps.LatLng(destinationData.k, destinationData.A));
       firstBounds.extend(destination.position);
       boundsExist = true;
     }
 
     for (x in friendsData) {
-      newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)
+      newPosition = new google.maps.LatLng(friendsData[x].position.k, friendsData[x].position.A)
       friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
       friends[x].showDirections();
       firstBounds.extend(friends[x].marker.position);
@@ -193,7 +193,7 @@ $(function() {
 
   socket.on('sendDestination', function(newDestination) {
     // console.log('somebody updated destination');
-    destination.setPosition(new google.maps.LatLng(newDestination.jb, newDestination.kb));
+    destination.setPosition(new google.maps.LatLng(newDestination.k, newDestination.A));
     $('#destTooltip').hide();
     var promises = []
     for (i in friends) {
@@ -269,11 +269,11 @@ function error(msg) {
 
 function populate (x, friendsData) {
   var dfd = $.Deferred();
-  newPosition = new google.maps.LatLng(friendsData[x].position.jb, friendsData[x].position.kb)     
+  newPosition = new google.maps.LatLng(friendsData[x].position.k, friendsData[x].position.A) 
   if (friends[x]){
     friends[x].marker.animation = null;
-    if (newPosition.jb != friends[x].marker.position.jb ||
-        newPosition.kb != friends[x].marker.position.kb ||  
+    if (newPosition.k != friends[x].marker.position.k ||
+        newPosition.A != friends[x].marker.position.A ||  
         friendsData[x].travelMode != friends[x].travelMode) {
       friends[x].marker.position = newPosition;
       friends[x].marker.setMap(null);
@@ -286,7 +286,7 @@ function populate (x, friendsData) {
   }
   else {
     friends[x] = new friend(x, newPosition, friendsData[x].travelMode);
-    $.when(friends[x].showDirections()).then(dfd.resolve());
+    if (destination.position) $.when(friends[x].showDirections()).then(dfd.resolve());
   }
   return dfd.promise();
 }

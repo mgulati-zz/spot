@@ -101,7 +101,7 @@ io.sockets.on('connection', function (socket) {
   //when anybody in the room updates the destination, update database and send to all
   socket.on('updateDestination', function (room, latLong) {
     if (room) {
-      console.log('destination in ' + room + ' updated to ' + latLong.jb + ',' + latLong.kb);
+      console.log('destination in ' + room + ' updated to ' + latLong.k + ',' + latLong.A);
       destination[room] = latLong;
       io.sockets.in(room).emit('sendDestination', destination[room]);
     }
