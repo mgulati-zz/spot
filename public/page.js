@@ -130,7 +130,7 @@ $(function() {
     changeDest(event.latLng);
   });
 
-  socket = io.connect(window.location.hostname, {'sync disconnect on unload' : true});
+  socket = io.connect('wss://' + window.location.hostname, {'sync disconnect on unload' : true});
   socket.on('initialize', function(friendsData, destinationData, roomData) {
     thisRoom = roomData;
 
